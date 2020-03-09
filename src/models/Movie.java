@@ -4,14 +4,36 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Date;
 
+import com.sun.org.glassfish.external.arc.Taxonomy;
+
+import annotation.AutoIncrement;
+import annotation.Column;
+import annotation.NotNull;
+import annotation.PrimaryKey;
+import annotation.Table;
 import base.Base;
+import base.DatabaseType;
 import base.Model;
 
+@Table(name="Movie")
 public class Movie implements Model<Movie> {
 
+	@Column(type=DatabaseType.Integer)
+	@AutoIncrement()
+	@PrimaryKey
+	@NotNull
 	public Integer id;
+	
+	@Column(type=DatabaseType.String)
+	@NotNull
 	public String title;
+	
+	@Column(type=DatabaseType.Date)
+	@NotNull
 	public Date releaseDate;
+	
+	@Column(type=DatabaseType.String)
+	@NotNull
 	public String description;
 	
 	@Override

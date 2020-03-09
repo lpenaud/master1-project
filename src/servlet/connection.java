@@ -1,7 +1,6 @@
 package servlet;
 
 import java.io.IOException;
-import java.sql.SQLException;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -9,9 +8,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import base.Base;
 import helpers.HttpStatusCode;
-import models.Administrator;
+import helpers.Servlet;
 import session.Session;
 
 /**
@@ -42,19 +40,10 @@ public class connection extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String login = request.getParameter("login");
 		String password = request.getParameter("password");
-		Base b = new Base();
-		Boolean isConnected;
-		Administrator admin = new Administrator(login, password);
-		try {
-			isConnected = admin.select(b);
-		} catch (SQLException e) {
-			isConnected = false;
-			e.printStackTrace();
-		}
-		if (isConnected) {
+		if (Servlet.connect(login, password)) {
 			Session s = Session.init(request);
 			s.setLogin(login);
-			s.setIdentifie(isConnected);
+			s.setIdentifie(true);
 			HttpStatusCode.Ok.sendStatus(response);
 		} else {
 			HttpStatusCode.Unauthorized.sendStatus(response);
