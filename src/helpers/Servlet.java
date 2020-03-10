@@ -17,8 +17,8 @@ public class Servlet {
 		try {
 			b.open();
 			ps = b.prepareStatement(sql);
-			ps.setString(0, login);
-			ps.setString(1, password);
+			ps.setString(1, login);
+			ps.setString(2, password);
 			rs = ps.executeQuery();
 			result = rs.getFetchSize() == 0;
 		} catch (SQLException e) {
