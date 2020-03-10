@@ -3,13 +3,28 @@ package models;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import annotation.*;
 import base.Base;
+import base.DatabaseType;
 import base.Model;
 
+@Table(name="MoviePicture")
 public class MoviePicture implements Model<MoviePicture> {
 
+	
+	@Column(type=DatabaseType.Integer)
+	@PrimaryKey
+	@NotNull
+	@ForeignKey(table="Movie", primaryKey="id")
 	public Integer idMovie;
+	
+	@Column(type=DatabaseType.Integer)
+	@PrimaryKey
+	@NotNull
+	@ForeignKey(table="Picture", primaryKey="id")
 	public Integer idPicture;
+	
+	@Column(type=DatabaseType.String)
 	public String type;
 	
 	@Override

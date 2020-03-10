@@ -1,7 +1,7 @@
 package base;
 
 public enum DatabaseType {
-	Integer("INTEGER"),
+	Integer("INT"),
 	Date("DATE"),
 	String("VARCHAR(255)");
 	

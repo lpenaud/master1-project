@@ -4,8 +4,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Date;
 
-import com.sun.org.glassfish.external.arc.Taxonomy;
-
 import annotation.AutoIncrement;
 import annotation.Column;
 import annotation.NotNull;
@@ -19,7 +17,7 @@ import base.Model;
 public class Movie implements Model<Movie> {
 
 	@Column(type=DatabaseType.Integer)
-	@AutoIncrement()
+	@AutoIncrement
 	@PrimaryKey
 	@NotNull
 	public Integer id;

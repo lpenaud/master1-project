@@ -1,6 +1,5 @@
 package base;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -11,10 +10,13 @@ import java.util.ResourceBundle;
 
 import annotation.AutoIncrement;
 import annotation.Column;
+import annotation.ForeignKey;
 import annotation.NotNull;
 import annotation.PrimaryKey;
 import annotation.Table;
 import models.Movie;
+import models.MoviePicture;
+import models.Picture;
 
 public class Base {
 	
@@ -101,65 +103,99 @@ public class Base {
 		return this.conn.prepareStatement(sql);
 	}
 	
-	public static void createTable(Class c) {
+	public void createTable(Class<?> c) throws SQLException {
+		String drop = generateDropIfExists(c);
+		String create = generateScriptTable(c);
+		Statement stm = this.conn.createStatement();
+		stm.executeUpdate("SET FOREIGN_KEY_CHECKS=0");
+		System.out.println(drop);
+		stm.executeUpdate(drop);
+		System.out.println(create);
+		stm.executeUpdate(create);
+		stm.executeUpdate("SET FOREIGN_KEY_CHECKS=1");
+		try {
+			stm.close();
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
+	
+	private static String generateDropIfExists(Class<?> c) {
+		Table table = (Table) c.getAnnotation(Table.class);
+		if (table == null) {
+			throw new Error(String.format("%s must be annoted by annotation.Table", c.getName()));
+		}
+		return String.format("DROP TABLE IF EXISTS %s", table.name());
+	}
+	
+	private static String generateScriptTable(Class<?> c) {
 		String className = c.getName();
 		Table table = (Table) c.getAnnotation(Table.class);
-		// c.isAnnotationPresent(Table.class)
 		if (table == null) {
 			throw new Error(String.format("%s must be annoted by annotation.Table", className));
 		}
+		PrimaryKeys primaries = new PrimaryKeys(table.name());
+		StringBuilder foreignKeys = new StringBuilder("");
 		StringBuilder builder = new StringBuilder("CREATE TABLE " + table.name() + "(");
 		Field fields[] = c.getDeclaredFields();
 		for (Field field : fields) {
-			builder.append("\n");
+			String colName = field.getName();
+			builder.append(" ");
 			Column col = (Column) field.getAnnotation(Column.class);
 			if (col == null) {
 				throw new Error(String.format("%s.%s must be annoted by annotation.Column", className, field.getName()));
 			}
-			builder.append("\t");
-			builder.append(field.getName());
+			builder.append(colName);
 			builder.append(" ");
 			builder.append(col.type());
+			if (field.isAnnotationPresent(PrimaryKey.class)) {
+				primaries.addKey(colName);
+			}
+			ForeignKey foreignKey = field.getAnnotation(ForeignKey.class);
+			if (foreignKey != null) {
+				foreignKeys.append("CONSTRAINT FK_");
+				foreignKeys.append(foreignKey.table());
+				foreignKeys.append(table.name());
+				foreignKeys.append(" FOREIGN KEY (");
+				foreignKeys.append(colName);
+				foreignKeys.append(") REFERENCES ");
+				foreignKeys.append(foreignKey.table());
+				foreignKeys.append("(");
+				foreignKeys.append(foreignKey.primaryKey());
+				foreignKeys.append("),");
+			}
+			if (field.isAnnotationPresent(NotNull.class)) {
+				builder.append(" NOT NULL");
+			}
+			AutoIncrement increment = field.getAnnotation(AutoIncrement.class);
+			if (increment != null) {
+				builder.append(" AUTO_INCREMENT");
+			}
 			builder.append(",");
 		}
-		builder.replace(builder.length() - 1, builder.length(), "\n)");
-		System.out.println(builder.toString());
+		builder.append(primaries);
+		if (foreignKeys.length() > 0) {
+			builder.append(",");
+			foreignKeys.replace(foreignKeys.length() - 2, foreignKeys.length(), "");
+			builder.append(foreignKeys);
+			builder.append(")");
+		}
+		builder.append(" )");
+		return builder.toString();
 	}
 	
 	public static void main(String[] args) {
-		createTable(Movie.class);
-//		Base base = new Base("config/config");
-//		try {
-//			base.open();
-//			Statement stm = base.conn.createStatement();
-//			stm.executeUpdate("DROP Table IF EXISTS 'MaTable'");
-//			stm.executeUpdate(
-//				"CREATE TABLE Movie ( \n" + 
-//				"	id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,\n" + 
-//				"	title VARCHAR(255),\n" + 
-//				"	releaseDate DATE,\n" + 
-//				"	description VARCHAR(255) \n" + 
-//				");"
-//			);
-//			stm.executeUpdate("CREATE TABLE Picture (\n" + 
-//					"	id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,\n" + 
-//					"	pathname VARCHAR(255) \n" + 
-//					");"
-//			);
-//			stm.executeUpdate("CREATE TABLE MoviePicture (\n" + 
-//					"	idMovie INT NOT NULL, \n" + 
-//					"	idPicture INT NOT NULL,\n" + 
-//					"	type VARCHAR(255),\n" + 
-//					"	CONSTRAINT FK_idMovie FOREIGN KEY (idMovie) REFERENCES Movie(id), \n" + 
-//					"	CONSTRAINT FK_idPicture FOREIGN KEY (idPicture) REFERENCES Picture(id) \n" + 
-//					");"
-//			);
-//			stm.close();
-//			base.close();
-//		} catch (Exception e) {
-//			System.err.println("Erreur !");
-//			e.printStackTrace();
-//		}
+		Base b = new Base();
+		try {
+			b.open();
+			b.createTable(Movie.class);
+			b.createTable(Picture.class);
+			b.createTable(MoviePicture.class);
+			b.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
 

@@ -1,14 +1,23 @@
 package models;
 
+import annotation.*;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import base.Base;
+import base.DatabaseType;
 import base.Model;
 
+@Table(name="Picture")
 public class Picture implements Model<Picture> {
 
+	@Column(type=DatabaseType.Integer)
+	@NotNull
+	@PrimaryKey
 	public Integer id;
+	
+	@Column(type=DatabaseType.String)
+	@NotNull
 	public String pathname;
 	
 	@Override
