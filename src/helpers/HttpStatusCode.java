@@ -15,8 +15,10 @@ public enum HttpStatusCode {
 	Ok(200, "OK"),
 	Created(201, "Created"),
 	Unauthorized(401, "Unauthorized"),
-	NotFound(404, "Not Found");
-	
+	NotFound(404, "Not Found"),
+	UnprocessableEntity(422, "Unprocessable Entity"),
+	InternalServerError(500, "Internal Server Error");
+
 	private String message;
 	private Integer code;
 	
