@@ -4,9 +4,11 @@ import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 import annotation.AutoIncrement;
 import annotation.Column;
@@ -82,20 +84,6 @@ public class Base {
 		return true;
 	}
 	
-	public void update(Model<?> model) {
-		try {
-			this.open();
-			model.update(this);
-		} catch (Exception e) {
-			System.err.println("Erreur update");
-			e.printStackTrace();
-		}
-		try {
-			this.clone();
-		} catch (Exception e) {
-		}
-	}
-	
 	public PreparedStatement prepareStatement(String sql) throws SQLException {
 		return this.conn.prepareStatement(sql);
 	}
@@ -162,6 +150,18 @@ public class Base {
 		if (isClosed) {
 			this.close();	
 		}
+	}
+	
+	public void select(String sql, Consumer<ResultSet> consumer) throws SQLException {
+		this.open();
+		PreparedStatement statement = this.conn.prepareStatement(sql);
+		ResultSet rs = statement.executeQuery();
+		while (rs.next()) {
+			consumer.accept(rs);
+		}
+		statement.close();
+		rs.close();
+		this.close();
 	}
 	
 	private static String generateScriptTable(Class<?> c) {

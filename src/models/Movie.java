@@ -1,6 +1,6 @@
 package models;
 
-import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Date;
 
@@ -9,12 +9,11 @@ import annotation.Column;
 import annotation.NotNull;
 import annotation.PrimaryKey;
 import annotation.Table;
-import base.Base;
 import base.DatabaseType;
 import base.Model;
 
 @Table(name="Movie")
-public class Movie implements Model<Movie> {
+public class Movie implements Model {
 
 	@Column(type=DatabaseType.Integer)
 	@AutoIncrement
@@ -33,22 +32,14 @@ public class Movie implements Model<Movie> {
 	@Column(type=DatabaseType.String)
 	@NotNull
 	public String description;
-
-	@Override
-	public void update(Base b) throws SQLException {
-		String sql = "UPDATE Movie SET title=?, releaseDate=?, description=? WHERE id=?";
-		PreparedStatement ps = b.prepareStatement(sql);
-		ps.setString(1, this.title);
-		ps.setDate(2,  new java.sql.Date(this.releaseDate.getTime()));
-		ps.setString(3, this.description);
-		ps.setInt(4,this.id);
-		ps.executeUpdate();
-	}
-
-	@Override
-	public Movie select(Base b) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+	
+	public Movie() {}
+	
+	public Movie(ResultSet rs) throws SQLException {
+		this.id = rs.getInt("id");
+		this.title = rs.getString("title");
+		this.releaseDate = rs.getDate("releaseDate");
+		this.description = rs.getString("description");
 	}
 	
 }
