@@ -19,14 +19,6 @@ public class Picture implements Model<Picture> {
 	@Column(type=DatabaseType.String)
 	@NotNull
 	public String pathname;
-	
-	@Override
-	public void insert(Base b) throws SQLException {
-		String sql = "INSERT INTO Picture (pathname) VALUES (?)";
-		PreparedStatement ps = b.prepareStatement(sql);
-		ps.setString(1, this.pathname);
-		ps.execute();
-	}
 
 	@Override
 	public void update(Base b) throws SQLException {

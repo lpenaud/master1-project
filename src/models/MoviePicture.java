@@ -26,16 +26,6 @@ public class MoviePicture implements Model<MoviePicture> {
 	
 	@Column(type=DatabaseType.String)
 	public String type;
-	
-	@Override
-	public void insert(Base b) throws SQLException {
-		String sql = "INSERT INTO MoviePicture (idMovie, idPicture, type) VALUES (?, ?, ?)";
-		PreparedStatement ps = b.prepareStatement(sql);
-		ps.setInt(1, idMovie);
-		ps.setInt(2, idPicture);
-		ps.setString(3, type);
-		ps.execute();
-	}
 
 	@Override
 	public void update(Base b) throws SQLException {

@@ -48,6 +48,18 @@ public class Base {
 		this.password = rb.getString("password");
 	}
 	
+	public boolean isClosed() {
+		if (this.conn == null) {
+			return true;
+		}
+		try {
+			return this.conn.isClosed();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return true;
+	}
+	
 	public boolean open() {
 		try {
 			this.conn = DriverManager.getConnection(this.url, this.user, this.password);
@@ -70,22 +82,7 @@ public class Base {
 		return true;
 	}
 	
-	public void insert(Model model) {
-		try {
-			this.open();
-			model.insert(this);
-		} catch (Exception e) {
-			System.err.println("Erreur insert");
-			e.printStackTrace();
-		}
-		try {
-			this.clone();
-		} catch (Exception e) {
-			
-		}
-	}
-	
-	public void update(Model model) {
+	public void update(Model<?> model) {
 		try {
 			this.open();
 			model.update(this);
@@ -128,22 +125,57 @@ public class Base {
 		return String.format("DROP TABLE IF EXISTS %s", table.name());
 	}
 	
-	private static String generateScriptTable(Class<?> c) {
-		String className = c.getName();
-		Table table = (Table) c.getAnnotation(Table.class);
-		if (table == null) {
-			throw new Error(String.format("%s must be annoted by annotation.Table", className));
+	private static String getTableName(Class<?> c) {
+		Table t = (Table) c.getAnnotation(Table.class);
+		if (t == null) {
+			throw new Error(String.format("%s must be annoted by annotation.Table", c.getName()));
 		}
-		PrimaryKeys primaries = new PrimaryKeys(table.name());
-		StringBuilder foreignKeys = new StringBuilder("");
-		StringBuilder builder = new StringBuilder("CREATE TABLE " + table.name() + "(");
+		return t.name();
+	}
+	
+	public <T> void insert(Class<T> c, T object) throws SQLException {
+		boolean isClosed = this.isClosed();
+		String tableName = getTableName(c);
+		Field fields[] = c.getDeclaredFields();
+		Insert insert = new Insert(tableName);
+		for (Field field : fields) {
+			if (field.isAnnotationPresent(Column.class) == false || field.isAnnotationPresent(AutoIncrement.class)) {
+				continue;
+			}
+			try {
+				insert.put(field.getName(), field.get(object), field.getAnnotation(Column.class).type().sqlType());
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		if (isClosed) {
+			this.open();	
+		}
+		PreparedStatement statement = this.prepareStatement(insert.toString());
+		Insert.Value[] values = insert.values();
+		for (int i = 0; i < values.length; i++) {
+			Insert.Value value = values[i];
+			statement.setObject(i + 1, value.getValue(), value.getSqlType());
+		}
+		statement.executeUpdate();
+		if (isClosed) {
+			this.close();	
+		}
+	}
+	
+	private static String generateScriptTable(Class<?> c) {
+		String tableName = getTableName(c);
+		PrimaryKeys primaries = new PrimaryKeys(tableName);
+		StringBuilder foreignKeys = new StringBuilder();
+		StringBuilder builder = new StringBuilder("CREATE TABLE " + tableName + "(");
 		Field fields[] = c.getDeclaredFields();
 		for (Field field : fields) {
 			String colName = field.getName();
 			builder.append(" ");
 			Column col = (Column) field.getAnnotation(Column.class);
 			if (col == null) {
-				throw new Error(String.format("%s.%s must be annoted by annotation.Column", className, field.getName()));
+				throw new Error(String.format("%s.%s must be annoted by annotation.Column", c.getName(), field.getName()));
 			}
 			builder.append(colName);
 			builder.append(" ");
@@ -155,7 +187,7 @@ public class Base {
 			if (foreignKey != null) {
 				foreignKeys.append("CONSTRAINT FK_");
 				foreignKeys.append(foreignKey.table());
-				foreignKeys.append(table.name());
+				foreignKeys.append(tableName);
 				foreignKeys.append(" FOREIGN KEY (");
 				foreignKeys.append(colName);
 				foreignKeys.append(") REFERENCES ");

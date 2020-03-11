@@ -2,7 +2,7 @@ package models;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Date;
+import java.sql.Date;
 
 import annotation.AutoIncrement;
 import annotation.Column;
@@ -33,16 +33,6 @@ public class Movie implements Model<Movie> {
 	@Column(type=DatabaseType.String)
 	@NotNull
 	public String description;
-	
-	@Override
-	public void insert(Base b) throws SQLException {
-		String sql = "INSERT INTO Movie (title, releaseDate, description) VALUES (?, ?, ?)";
-		PreparedStatement ps = b.prepareStatement(sql);
-		ps.setString(1, this.title);
-		ps.setDate(2,  new java.sql.Date(this.releaseDate.getTime()));
-		ps.setString(3, this.description);
-		ps.execute();
-	}
 
 	@Override
 	public void update(Base b) throws SQLException {
