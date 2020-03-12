@@ -7,8 +7,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import annotation.AutoIncrement;
 import annotation.Column;
@@ -162,6 +165,20 @@ public class Base {
 		statement.close();
 		rs.close();
 		this.close();
+	}
+	
+	public <R> List<R> select(String sql, Function<ResultSet, R> function) throws SQLException {
+		this.open();
+		PreparedStatement statement = this.conn.prepareStatement(sql);
+		ResultSet rs = statement.executeQuery();
+		List<R> objects = new ArrayList<>();
+		while (rs.next()) {
+			objects.add(function.apply(rs));
+		}
+		statement.close();
+		rs.close();
+		this.close();
+		return objects;
 	}
 	
 	private static String generateScriptTable(Class<?> c) {

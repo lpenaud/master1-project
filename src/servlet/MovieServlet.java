@@ -3,6 +3,7 @@ package servlet;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -12,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import base.Base;
 import helpers.HttpStatusCode;
+import helpers.Servlet;
 import helpers.Verification;
 import models.Movie;
 
@@ -26,8 +28,22 @@ public class MovieServlet extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		
-		HttpStatusCode.NotFound.sendStatus(response);
+		Base b = new Base();
+		List<Movie> movies = null;
+		try {
+			movies = b.select("SELECT * FROM Movie", (rs) -> {
+				try {
+					return new Movie(rs);
+				} catch (SQLException e) {
+					e.printStackTrace();
+					return null;
+				}
+			});
+		} catch (SQLException e) {
+			e.printStackTrace();
+			HttpStatusCode.InternalServerError.sendStatus(response);
+		}
+		Servlet.sendJson(movies, response);
 	}
 
 	/**
