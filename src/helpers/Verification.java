@@ -2,7 +2,6 @@ package helpers;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.regex.*;
 
@@ -33,7 +32,6 @@ public class Verification {
 
 	public String getString(String parameter, Integer minLen) {
 		String value = this.request.getParameter(parameter);
-		System.out.println("value:" + value);
 		if (value == null) {
 			this.errors.add(parameter);
 			return null;
@@ -65,21 +63,13 @@ public class Verification {
 	 * Send error to client if any
 	 * @param response
 	 * @return true if there are errors false otherwise
+	 * @throws IOException 
 	 */
-	public boolean sendError(HttpServletResponse response) {
+	public boolean sendError(HttpServletResponse response) throws IOException {
 		if (this.errors.size() == 0) {
 			return false;
 		}
-		response.setStatus(HttpStatusCode.UnprocessableEntity.getCode());
-		Iterator<String> it = this.errors.iterator();
-		try {
-			response.getWriter().append(it.next());
-			while (it.hasNext()) {
-				response.getWriter().append("," + it.next());
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		HttpStatusCode.UnprocessableEntity.send(response, ListHelpers.join(this.errors));
 		return true;
 	}
 }

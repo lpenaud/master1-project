@@ -3,9 +3,11 @@ package servlet;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -13,16 +15,29 @@ import javax.servlet.http.HttpServletResponse;
 
 import base.Base;
 import helpers.HttpStatusCode;
+import helpers.PartFormater;
+import helpers.PartFormater.File;
 import helpers.Servlet;
-import helpers.Verification;
 import models.Movie;
+import models.MoviePicture;
+import models.Picture;
 
 /**
- * Servlet implementation class Movie
+ * Servlet implementation class Picture
  */
-@WebServlet("/Movie")
+@WebServlet("/movie")
+@MultipartConfig(fileSizeThreshold = 1024 * 1024, maxFileSize = 1024 * 1024 * 5,
+maxRequestSize = 1024 * 1024 * 5 * 5)
 public class MovieServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public MovieServlet() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
 
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
@@ -50,28 +65,37 @@ public class MovieServlet extends HttpServlet {
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		Movie movie = new Movie();
-		Verification verif = new Verification(request);
-		Long timestamp = verif.getLong("releaseDate");
-		movie.title = verif.getString("title", 1);
-		movie.description = verif.getString("description", 1);
-		if (verif.sendError(response)) {
+		PartFormater formater = new PartFormater(request);
+		String title = formater.readString("title");
+		String description = formater.readString("description");
+		Long releaseDate = formater.readLong("releaseDate");
+		PartFormater.File cover = formater.getFile("cover");
+		if (formater.sendError(response)) {
 			return;
 		}
+		Base base = new Base();
+		Movie movie = new Movie();
+		movie.description = description;
+		movie.title = title;
+		movie.releaseDate = new Date(releaseDate);
+		Picture picture = new Picture();
+		picture.contentType = cover.getContentType();
+		picture.name = cover.getPathname().getFileName().toString();
 		try {
-			movie.releaseDate = new Date(timestamp);
+			cover.write();
+			MoviePicture mp = new MoviePicture();
+			base.insert(Movie.class, movie);
+			base.insert(Picture.class, picture);
+			mp.idMovie = movie.id;
+			mp.idPicture = picture.id;
+			mp.type = "cover";
+			base.insert(MoviePicture.class, mp);
 		} catch (Exception e) {
-			HttpStatusCode.InternalServerError.sendStatus(response);
-		}
-		try {
-			Base b = new Base();
-			b.insert(Movie.class, movie);
-		} catch (SQLException e) {
 			e.printStackTrace();
 			HttpStatusCode.InternalServerError.sendStatus(response);
 			return;
 		}
-		HttpStatusCode.Created.sendStatus(response);
+		HttpStatusCode.Ok.sendStatus(response);
 	}
 
 }

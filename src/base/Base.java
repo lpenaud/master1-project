@@ -9,7 +9,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -19,6 +18,7 @@ import annotation.ForeignKey;
 import annotation.NotNull;
 import annotation.PrimaryKey;
 import annotation.Table;
+import helpers.Config;
 import models.Movie;
 import models.MoviePicture;
 import models.Picture;
@@ -43,14 +43,13 @@ public class Base {
 	}
 	
 	public Base() {
-		this("config/config");
+		this(Config.config);
 	}
 	
-	public Base(String pathname) {
-		ResourceBundle rb = ResourceBundle.getBundle(pathname);
-		this.url = rb.getString("url");
-		this.user = rb.getString("user");
-		this.password = rb.getString("password");
+	public Base(Config config) {
+		this.url = config.getUrl();
+		this.user = config.getUser();
+		this.password = config.getPassword();
 	}
 	
 	public boolean isClosed() {
@@ -124,13 +123,17 @@ public class Base {
 		return t.name();
 	}
 	
-	public <T> void insert(Class<T> c, T object) throws SQLException {
+	public <T> T insert(Class<T> c, T object) throws SQLException, IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
 		boolean isClosed = this.isClosed();
 		String tableName = getTableName(c);
 		Field fields[] = c.getDeclaredFields();
 		Insert insert = new Insert(tableName);
+		Field primaryKey = null;
 		for (Field field : fields) {
-			if (field.isAnnotationPresent(Column.class) == false || field.isAnnotationPresent(AutoIncrement.class)) {
+			if (field.isAnnotationPresent(PrimaryKey.class)) {
+				primaryKey = primaryKey == null ? field : null;
+			}
+			if (field.isAnnotationPresent(Column.class) == false) {
 				continue;
 			}
 			try {
@@ -143,33 +146,44 @@ public class Base {
 		if (isClosed) {
 			this.open();	
 		}
-		PreparedStatement statement = this.prepareStatement(insert.toString());
+		PreparedStatement statement = this.conn.prepareStatement(insert.toString(), Statement.RETURN_GENERATED_KEYS);
 		Insert.Value[] values = insert.values();
 		for (int i = 0; i < values.length; i++) {
 			Insert.Value value = values[i];
 			statement.setObject(i + 1, value.getValue(), value.getSqlType());
 		}
-		statement.executeUpdate();
+		int result = statement.executeUpdate();
+		ResultSet rs = statement.getGeneratedKeys();
+		if (rs.next()) {
+			result = rs.getInt(1);
+		}
+		if (primaryKey != null) {
+			primaryKey.set(object, result);			
+		}
 		if (isClosed) {
 			this.close();	
 		}
-	}
-	
-	public void select(String sql, Consumer<ResultSet> consumer) throws SQLException {
-		this.open();
-		PreparedStatement statement = this.conn.prepareStatement(sql);
-		ResultSet rs = statement.executeQuery();
-		while (rs.next()) {
-			consumer.accept(rs);
-		}
-		statement.close();
-		rs.close();
-		this.close();
+		return object;
 	}
 	
 	public <R> List<R> select(String sql, Function<ResultSet, R> function) throws SQLException {
 		this.open();
 		PreparedStatement statement = this.conn.prepareStatement(sql);
+		ResultSet rs = statement.executeQuery();
+		List<R> objects = new ArrayList<>();
+		while (rs.next()) {
+			objects.add(function.apply(rs));
+		}
+		statement.close();
+		rs.close();
+		this.close();
+		return objects;
+	}
+	
+	public <R> List<R> select(String sql, Consumer<PreparedStatement> setStatement, Function<ResultSet, R> function) throws SQLException {
+		this.open();
+		PreparedStatement statement = this.conn.prepareStatement(sql);
+		setStatement.accept(statement);
 		ResultSet rs = statement.executeQuery();
 		List<R> objects = new ArrayList<>();
 		while (rs.next()) {

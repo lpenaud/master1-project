@@ -34,10 +34,14 @@ public enum HttpStatusCode {
 	public Integer getCode() {
 		return this.code;
 	}
-
-	public void sendStatus(HttpServletResponse response) throws IOException {
+	
+	public void send(HttpServletResponse response, String message) throws IOException {
 		response.setStatus(this.code);
 		response.setContentType("text/plain");
-		response.getWriter().append(this.message);
+		response.getWriter().append(message);
+	}
+
+	public void sendStatus(HttpServletResponse response) throws IOException {
+		this.send(response, this.message);
 	}
 }

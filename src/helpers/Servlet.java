@@ -70,4 +70,8 @@ public class Servlet {
 		generator.close();
 		response.setStatus(HttpStatusCode.Ok.getCode());
 	}
+	
+	public static String randomFilename() {
+		return Long.toString(System.currentTimeMillis(), 36) + Long.toString(Math.round(Math.random()), 36);
+	}
 }
