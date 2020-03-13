@@ -6,6 +6,11 @@ public class Session {
 	protected boolean connected;
 	protected String login;
 	
+	public static boolean isConnected(HttpServletRequest request) {
+		Session s = init(request);
+		return s.isConnected();
+	}
+	
 	public static Session init(HttpServletRequest request) {
 		Session s = (Session) request.getSession().getAttribute("session");
 		if (s == null) {
@@ -15,11 +20,11 @@ public class Session {
 		return s;
 	}
 
-	public boolean isIdentifie() {
+	public boolean isConnected() {
 		return connected;
 	}
 
-	public void setIdentifie(boolean connected) {
+	public void setConnected(boolean connected) {
 		this.connected = connected;
 	}
 

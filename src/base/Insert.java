@@ -9,24 +9,6 @@ public class Insert {
 	protected String table;
 	protected Map<String, Value> keys;
 
-	class Value {
-		private Object value;
-		private int sqlType;
-
-		Value(Object value, int sqlType) {
-			this.value = value;
-			this.sqlType = sqlType;
-		}
-
-		public Object getValue() {
-			return value;
-		}
-
-		public int getSqlType() {
-			return sqlType;
-		}
-	}
-
 	Insert(String table) {
 		this.table = table;
 		this.keys = new HashMap<>();
@@ -42,7 +24,7 @@ public class Insert {
 
 	@Override
 	public String toString() {
-		if (this.keys.size() == 0) {
+		if (this.keys.isEmpty()) {
 			return "";
 		}
 		StringBuilder keys = new StringBuilder("INSERT INTO ");

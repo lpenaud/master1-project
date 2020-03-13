@@ -147,9 +147,9 @@ public class Base {
 			this.open();	
 		}
 		PreparedStatement statement = this.conn.prepareStatement(insert.toString(), Statement.RETURN_GENERATED_KEYS);
-		Insert.Value[] values = insert.values();
+		Value[] values = insert.values();
 		for (int i = 0; i < values.length; i++) {
-			Insert.Value value = values[i];
+			Value value = values[i];
 			statement.setObject(i + 1, value.getValue(), value.getSqlType());
 		}
 		int result = statement.executeUpdate();
@@ -193,6 +193,37 @@ public class Base {
 		rs.close();
 		this.close();
 		return objects;
+	}
+	
+	public <T> Integer updateOne(T model) throws SQLException, IllegalArgumentException, IllegalAccessException {
+		String tableName = getTableName(model.getClass());
+		Update update = new Update(tableName);
+		Field[] fields = model.getClass().getFields();
+		for (Field field : fields) {
+			if (field.isAnnotationPresent(Column.class) == false) {
+				continue;
+			}
+			if (field.isAnnotationPresent(PrimaryKey.class)) {
+				update.putWhere(field, model);
+				continue;
+			}
+			update.putSet(field, model);
+		}
+		this.open();
+		PreparedStatement statement = this.conn.prepareStatement(update.toString(), Statement.RETURN_GENERATED_KEYS);
+		int i = 1;
+		for (Value s : update.values()) {
+			statement.setObject(i++, s.getValue(), s.getSqlType());
+		}
+		for (Value s : update.where()) {
+			statement.setObject(i++, s.getValue(), s.getSqlType());
+		}
+		ResultSet rs = statement.executeQuery();
+		Integer result = statement.executeUpdate();
+		if (rs.next()) {
+			result = rs.getInt(1);
+		}
+		return result;
 	}
 	
 	private static String generateScriptTable(Class<?> c) {

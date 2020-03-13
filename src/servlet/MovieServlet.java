@@ -2,6 +2,7 @@ package servlet;
 
 import java.io.IOException;
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -19,6 +20,7 @@ import http.HttpStatusCode;
 import models.Movie;
 import models.MoviePicture;
 import models.Picture;
+import session.Session;
 
 /**
  * Servlet implementation class Picture
@@ -63,6 +65,10 @@ public class MovieServlet extends HttpServlet {
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		if (Session.isConnected(request)) {
+			HttpStatusCode.Unauthorized.sendStatus(response);
+			return;
+		}
 		PartFormater formater = new PartFormater(request);
 		String title = formater.readString("title");
 		String description = formater.readString("description");
@@ -92,6 +98,58 @@ public class MovieServlet extends HttpServlet {
 			e.printStackTrace();
 			HttpStatusCode.InternalServerError.sendStatus(response);
 			return;
+		}
+		HttpStatusCode.Ok.sendStatus(response);
+	}
+	
+	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		if (Session.isConnected(request)) {
+			HttpStatusCode.Unauthorized.sendStatus(response);
+			return;
+		}
+		PartFormater formater = new PartFormater(request);
+		Integer id = formater.readInteger("id");
+		if (formater.sendError(response)) {
+			return;
+		}
+		Movie movie;
+		Base b = new Base();
+		try {
+			List<Movie> result = b.select("SELECT * FROM Movie WHERE id=?", (PreparedStatement statement) -> {
+				try {
+					statement.setInt(1, id);
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			},
+			(rs) -> {
+				try {
+					return new Movie(rs);
+				} catch (SQLException e) {
+					e.printStackTrace();
+					return null;
+				}
+			});
+			if (result == null) {
+				throw new Exception("Not found");
+			}
+			movie = result.get(0);
+			String title = formater.readString("title");
+			String description = formater.readString("description");
+			Long releaseDate = formater.readLong("releaseDate");
+			if (title != null) {
+				movie.title = title;
+			}
+			if (description != null) {
+				movie.description = description;
+			}
+			if (releaseDate != null) {
+				movie.releaseDate = new Date(releaseDate);
+			}
+			b.updateOne(movie);
+		} catch (Exception e) {
+			e.printStackTrace();
+			HttpStatusCode.InternalServerError.sendStatus(response);
 		}
 		HttpStatusCode.Ok.sendStatus(response);
 	}

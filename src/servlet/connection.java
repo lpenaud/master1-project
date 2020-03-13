@@ -8,8 +8,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import helpers.HttpStatusCode;
+
 import helpers.Servlet;
+import http.HttpStatusCode;
 import session.Session;
 
 /**
@@ -43,7 +44,7 @@ public class connection extends HttpServlet {
 		if (Servlet.connect(login, password)) {
 			Session s = Session.init(request);
 			s.setLogin(login);
-			s.setIdentifie(true);
+			s.setConnected(true);
 			HttpStatusCode.Ok.sendStatus(response);
 		} else {
 			HttpStatusCode.Unauthorized.sendStatus(response);

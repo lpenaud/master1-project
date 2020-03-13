@@ -76,10 +76,20 @@ public class PartFormater {
 		try {
 			return Long.valueOf(this.readString(name));
 		} catch (NumberFormatException e) {
-			this.errors.add(name);
 			e.printStackTrace();
-			return null;
 		}
+		this.errors.add(name);
+		return null;
+	}
+	
+	public Integer readInteger(String name) {
+		try {
+			return Integer.valueOf(this.readString(name));
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		}
+		this.errors.add(name);
+		return null;
 	}
 	
 	public File getFile(String name) throws IOException {
