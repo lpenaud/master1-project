@@ -1,6 +1,7 @@
 package servlet;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -11,19 +12,19 @@ import javax.servlet.http.HttpServletResponse;
 
 import helpers.Servlet;
 import http.HttpStatusCode;
-import session.Session;
+import http.Token;
 
 /**
  * Servlet implementation class connection
  */
 @WebServlet("/connection")
-public class connection extends HttpServlet {
+public class Connection extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public connection() {
+    public Connection() {
         super();
         // TODO Auto-generated constructor stub
     }
@@ -42,10 +43,12 @@ public class connection extends HttpServlet {
 		String login = request.getParameter("login");
 		String password = request.getParameter("password");
 		if (Servlet.connect(login, password)) {
-			Session s = Session.init(request);
-			s.setLogin(login);
-			s.setConnected(true);
-			HttpStatusCode.Ok.sendStatus(response);
+			try {
+				Token token = new Token();
+				Servlet.sendJson(token, response);
+			} catch (NoSuchAlgorithmException e) {
+				e.printStackTrace();
+			}
 		} else {
 			HttpStatusCode.Unauthorized.sendStatus(response);
 		}

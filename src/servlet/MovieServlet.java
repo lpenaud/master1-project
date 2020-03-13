@@ -65,7 +65,7 @@ public class MovieServlet extends HttpServlet {
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		if (Session.isConnected(request)) {
+		if (!Session.isConnected(request)) {
 			HttpStatusCode.Unauthorized.sendStatus(response);
 			return;
 		}
@@ -103,7 +103,7 @@ public class MovieServlet extends HttpServlet {
 	}
 	
 	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		if (Session.isConnected(request)) {
+		if (!Session.isConnected(request)) {
 			HttpStatusCode.Unauthorized.sendStatus(response);
 			return;
 		}
@@ -156,7 +156,7 @@ public class MovieServlet extends HttpServlet {
 	
 	@Override
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		if (Session.isConnected(request)) {
+		if (!Session.isConnected(request)) {
 			HttpStatusCode.Unauthorized.sendStatus(response);
 			return;
 		}

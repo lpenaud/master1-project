@@ -21,7 +21,7 @@ public class Servlet {
 		Base b = new Base();
 		String sql = "SELECT * FROM Administrator WHERE login = ? AND password = PASSWORD(?)";
 		ResultSet rs;
-		Boolean result;
+		Boolean result = false;
 		PreparedStatement ps;
 		try {
 			b.open();
@@ -29,7 +29,9 @@ public class Servlet {
 			ps.setString(1, login);
 			ps.setString(2, password);
 			rs = ps.executeQuery();
-			result = rs.getFetchSize() == 0;
+			if (rs.next()) {
+				result = true;
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return false;
