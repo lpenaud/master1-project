@@ -3,8 +3,8 @@ package helpers;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -14,7 +14,7 @@ import http.error.ErrorFields;
 
 public class PartFormater {
 	protected HttpServletRequest request;
-	protected List<String> errors;
+	protected Set<String> errors;
 	
 	public class File {
 		private Path pathname;
@@ -40,7 +40,7 @@ public class PartFormater {
 	
 	public PartFormater(HttpServletRequest request) {
 		this.request = request;
-		this.errors = new ArrayList<>();
+		this.errors = new HashSet<>();
 	}
 	
 	public String readString(String name) {
@@ -75,9 +75,7 @@ public class PartFormater {
 	public Long readLong(String name) {
 		try {
 			return Long.valueOf(this.readString(name));
-		} catch (NumberFormatException e) {
-			e.printStackTrace();
-		}
+		} catch (NumberFormatException e) {}
 		this.errors.add(name);
 		return null;
 	}
@@ -85,9 +83,7 @@ public class PartFormater {
 	public Integer readInteger(String name) {
 		try {
 			return Integer.valueOf(this.readString(name));
-		} catch (NumberFormatException e) {
-			e.printStackTrace();
-		}
+		} catch (NumberFormatException e) {}
 		this.errors.add(name);
 		return null;
 	}

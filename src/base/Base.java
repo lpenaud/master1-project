@@ -195,7 +195,7 @@ public class Base {
 		return objects;
 	}
 	
-	public <T> Integer updateOne(T model) throws SQLException, IllegalArgumentException, IllegalAccessException {
+	public Integer updateOne(Object model) throws SQLException, IllegalArgumentException, IllegalAccessException {
 		String tableName = getTableName(model.getClass());
 		Update update = new Update(tableName);
 		Field[] fields = model.getClass().getFields();
@@ -210,7 +210,7 @@ public class Base {
 			update.putSet(field, model);
 		}
 		this.open();
-		PreparedStatement statement = this.conn.prepareStatement(update.toString(), Statement.RETURN_GENERATED_KEYS);
+		PreparedStatement statement = this.conn.prepareStatement(update.toString());
 		int i = 1;
 		for (Value s : update.values()) {
 			statement.setObject(i++, s.getValue(), s.getSqlType());
@@ -218,14 +218,35 @@ public class Base {
 		for (Value s : update.where()) {
 			statement.setObject(i++, s.getValue(), s.getSqlType());
 		}
-		ResultSet rs = statement.executeQuery();
-		Integer result = statement.executeUpdate();
-		if (rs.next()) {
-			result = rs.getInt(1);
-		}
-		return result;
+		Integer res = statement.executeUpdate();
+		try {
+			statement.close();
+			this.close();
+		} catch (Exception e) {}
+		return res;
 	}
-	
+
+	public Integer deleteOne(Object model) throws SQLException, IllegalArgumentException, IllegalAccessException {
+		Delete delete = new Delete(getTableName(model.getClass()));
+		for (Field f : model.getClass().getFields()) {
+			if (f.isAnnotationPresent(Column.class) && f.isAnnotationPresent(PrimaryKey.class)) {
+				delete.putWhere(f, model);
+			}
+		}
+		this.open();
+		PreparedStatement statement = this.conn.prepareStatement(delete.toString());
+		Value[] where = delete.where();
+		for (int i = 0; i < where.length; i++) {
+			statement.setObject(i + 1, where[i].getValue(), where[i].getSqlType());
+		}
+		Integer res = statement.executeUpdate();
+		try {
+			statement.close();
+			this.close();
+		} catch (Exception e) {}
+		return res;
+	}
+
 	private static String generateScriptTable(Class<?> c) {
 		String tableName = getTableName(c);
 		PrimaryKeys primaries = new PrimaryKeys(tableName);
@@ -256,7 +277,7 @@ public class Base {
 				foreignKeys.append(foreignKey.table());
 				foreignKeys.append("(");
 				foreignKeys.append(foreignKey.primaryKey());
-				foreignKeys.append("),");
+				foreignKeys.append(") ON DELETE CASCADE,");
 			}
 			if (field.isAnnotationPresent(NotNull.class)) {
 				builder.append(" NOT NULL");
@@ -270,9 +291,8 @@ public class Base {
 		builder.append(primaries);
 		if (foreignKeys.length() > 0) {
 			builder.append(",");
-			foreignKeys.replace(foreignKeys.length() - 2, foreignKeys.length(), "");
+			foreignKeys.replace(foreignKeys.length() - 1, foreignKeys.length(), "");
 			builder.append(foreignKeys);
-			builder.append(")");
 		}
 		builder.append(" )");
 		return builder.toString();

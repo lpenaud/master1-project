@@ -51,7 +51,7 @@ public class Update implements Function<String, String> {
 		}
 		Object[] set = this.set.keySet().stream().map(this).toArray();
 		Object[] where = this.where.keySet().stream().map(this).toArray();
-		return String.format("UPDATE %s %s WHERE %s", this.table, ListHelpers.join(set), ListHelpers.join(where));
+		return String.format("UPDATE %s SET %s WHERE %s", this.table, ListHelpers.join(set), ListHelpers.join(where));
 	}
 
 	@Override

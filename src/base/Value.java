@@ -16,4 +16,9 @@ class Value {
 	public int getSqlType() {
 		return sqlType;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("Value: %s, Type: %d", this.getValue().toString(), this.getSqlType());
+	}
 }

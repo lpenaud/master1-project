@@ -147,11 +147,32 @@ public class MovieServlet extends HttpServlet {
 				movie.releaseDate = new Date(releaseDate);
 			}
 			b.updateOne(movie);
+			HttpStatusCode.Ok.sendStatus(response);
 		} catch (Exception e) {
 			e.printStackTrace();
 			HttpStatusCode.InternalServerError.sendStatus(response);
 		}
-		HttpStatusCode.Ok.sendStatus(response);
+	}
+	
+	@Override
+	protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		if (Session.isConnected(request)) {
+			HttpStatusCode.Unauthorized.sendStatus(response);
+			return;
+		}
+		PartFormater formater = new PartFormater(request);
+		Integer id = formater.readInteger("id");
+		if (formater.sendError(response)) {
+			return;
+		}
+		Base base = new Base();
+		try {
+			base.deleteOne(new Movie(id));
+			HttpStatusCode.Ok.sendStatus(response);
+		} catch (SQLException | IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+			HttpStatusCode.InternalServerError.sendStatus(response);
+		}
 	}
 
 }

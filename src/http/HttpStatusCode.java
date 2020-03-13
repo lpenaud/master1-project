@@ -7,15 +7,9 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-
-import helpers.Servlet;
-
 /**
  *
  */
-@JsonAutoDetect(fieldVisibility = Visibility.ANY)
 public enum HttpStatusCode {
 	
 	Ok(200, "OK"),
@@ -42,14 +36,12 @@ public enum HttpStatusCode {
 	}
 	
 	public void send(HttpServletResponse response, String message) throws IOException {
-		String defaultMessage = this.message;
-		this.message = message;
-		this.sendStatus(response);
-		this.message = defaultMessage;
+		response.setStatus(this.code);
+		response.setContentType("text/plain");
+		response.getWriter().append(message);
 	}
 
 	public void sendStatus(HttpServletResponse response) throws IOException {
-		response.setStatus(this.code);
-		Servlet.sendJson(this, response);
+		this.send(response, this.message);
 	}
 }

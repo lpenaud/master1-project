@@ -1,8 +1,8 @@
 package helpers;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -11,11 +11,11 @@ import javax.servlet.http.HttpServletResponse;
 import http.error.ErrorFields;
 
 public class Verification {
-	protected List<String> errors;
+	protected Set<String> errors;
 	protected HttpServletRequest request;
 
 	public Verification(HttpServletRequest request) {
-		this.errors = new ArrayList<>();
+		this.errors = new HashSet<>();
 		this.request = request;
 	}
 

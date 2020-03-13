@@ -35,6 +35,10 @@ public class Movie implements Model {
 	
 	public Movie() {}
 	
+	public Movie(Integer id) {
+		this.id = id;
+	}
+	
 	public Movie(ResultSet rs) throws SQLException {
 		this.id = rs.getInt("id");
 		this.title = rs.getString("title");
