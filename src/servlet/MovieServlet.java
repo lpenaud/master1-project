@@ -3,7 +3,6 @@ package servlet;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -14,10 +13,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import base.Base;
-import helpers.HttpStatusCode;
 import helpers.PartFormater;
-import helpers.PartFormater.File;
 import helpers.Servlet;
+import http.HttpStatusCode;
 import models.Movie;
 import models.MoviePicture;
 import models.Picture;
