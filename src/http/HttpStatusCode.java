@@ -1,7 +1,7 @@
 /**
  * 
  */
-package helpers;
+package http;
 
 import java.io.IOException;
 

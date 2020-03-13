@@ -10,22 +10,23 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
+import http.error.ErrorFields;
+
 public class PartFormater {
 	protected HttpServletRequest request;
 	protected List<String> errors;
 	
 	public class File {
-		private String contentType;
 		private Path pathname;
 		private Part part;
 		
-		protected File(Part part, String contentType, Path pathname) {
-			this.contentType = contentType;
+		protected File(Part part, Path pathname) {
 			this.pathname = pathname;
+			this.part = part;
 		}
 
 		public String getContentType() {
-			return contentType;
+			return this.part.getContentType();
 		}
 
 		public Path getPathname() {
@@ -92,7 +93,7 @@ public class PartFormater {
 		}
 		String dst = Servlet.randomFilename() + "." + part.getContentType().split("/")[1];
 		Path abs = Paths.get(Config.config.getBucket(), dst);
-		return new File(part, part.getContentType(), abs);
+		return new File(part, abs);
 	}
 	
 	/**
@@ -105,7 +106,8 @@ public class PartFormater {
 		if (this.errors.isEmpty()) {
 			return false;
 		}
-		HttpStatusCode.UnprocessableEntity.send(response, ListHelpers.join(this.errors));
+		ErrorFields ef = new ErrorFields(this.errors);
+		ef.sendError(response);
 		return true;
 	}
 }

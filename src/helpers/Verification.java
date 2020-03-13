@@ -8,6 +8,8 @@ import java.util.regex.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import http.error.ErrorFields;
+
 public class Verification {
 	protected List<String> errors;
 	protected HttpServletRequest request;
@@ -66,10 +68,11 @@ public class Verification {
 	 * @throws IOException 
 	 */
 	public boolean sendError(HttpServletResponse response) throws IOException {
-		if (this.errors.size() == 0) {
+		if (this.errors.isEmpty()) {
 			return false;
 		}
-		HttpStatusCode.UnprocessableEntity.send(response, ListHelpers.join(this.errors));
+		ErrorFields ef = new ErrorFields(this.errors);
+		ef.sendError(response);
 		return true;
 	}
 }
