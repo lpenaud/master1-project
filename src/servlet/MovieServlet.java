@@ -44,13 +44,12 @@ public class MovieServlet extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		Base b = new Base();
-		List<Movie> movies = null;
 		try {
-			movies = b.select("SELECT Movie.id as id, title, releaseDate, description, Picture.name as cover " + 
+			List<Movie> movies = b.select("SELECT Movie.id as id, title, releaseDate, description, Picture.name as cover " + 
 					"FROM Movie " + 
 					"INNER JOIN MoviePicture ON Movie.id = MoviePicture.idMovie " + 
 					"INNER JOIN Picture ON MoviePicture.idPicture = Picture.id " + 
-					"WHERE MoviePicture.type = 'cover'", (rs) -> {
+					"WHERE MoviePicture.type='cover'", (rs) -> {
 				try {
 					return new Movie(rs);
 				} catch (SQLException e) {
@@ -58,11 +57,11 @@ public class MovieServlet extends HttpServlet {
 					return null;
 				}
 			});
+			Servlet.sendJson(movies, response);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			HttpStatusCode.InternalServerError.sendStatus(response);
 		}
-		Servlet.sendJson(movies, response);
 	}
 
 	/**
@@ -152,7 +151,22 @@ public class MovieServlet extends HttpServlet {
 				movie.releaseDate = new Date(releaseDate);
 			}
 			b.updateOne(movie);
-			Servlet.sendJson(movie, response);
+			List<Movie> movies = b.select("SELECT Movie.id as id, title, releaseDate, description, Picture.name as cover " + 
+					"FROM Movie " + 
+					"INNER JOIN MoviePicture ON Movie.id = MoviePicture.idMovie " + 
+					"INNER JOIN Picture ON MoviePicture.idPicture = Picture.id " + 
+					"WHERE MoviePicture.type='cover' AND Movie.id=?", (statement) -> {
+						try {
+							statement.setInt(1, movie.id);
+						} catch (SQLException e) {}
+					}, (rs) -> {
+						try {
+							return new Movie(rs);
+						} catch (SQLException e) {
+							return null;
+						}
+					});
+			Servlet.sendJson(movies.get(0), response);
 		} catch (Exception e) {
 			e.printStackTrace();
 			HttpStatusCode.InternalServerError.sendStatus(response);
