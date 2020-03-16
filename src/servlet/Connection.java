@@ -1,14 +1,12 @@
 package servlet;
 
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 
 import helpers.Servlet;
 import http.HttpStatusCode;
@@ -43,15 +41,11 @@ public class Connection extends HttpServlet {
 		String login = request.getParameter("login");
 		String password = request.getParameter("password");
 		if (Servlet.connect(login, password)) {
-			try {
-				Token token = new Token();
-				Servlet.sendJson(token, response);
-			} catch (NoSuchAlgorithmException e) {
-				e.printStackTrace();
-			}
-		} else {
-			HttpStatusCode.Unauthorized.sendStatus(response);
+			Token token = new Token();
+			token.send(response);
+			return;
 		}
+		HttpStatusCode.Unauthorized.sendStatus(response);
 	}
 
 }

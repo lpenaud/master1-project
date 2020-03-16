@@ -33,6 +33,8 @@ public class Movie implements Model {
 	@NotNull
 	public String description;
 	
+	public String cover;
+	
 	public Movie() {}
 	
 	public Movie(Integer id) {
@@ -44,6 +46,9 @@ public class Movie implements Model {
 		this.title = rs.getString("title");
 		this.releaseDate = rs.getDate("releaseDate");
 		this.description = rs.getString("description");
+		try {
+			this.cover = rs.getString("cover");
+		} catch (SQLException e) {}
 	}
 	
 }

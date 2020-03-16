@@ -17,10 +17,10 @@ import base.Base;
 import helpers.PartFormater;
 import helpers.Servlet;
 import http.HttpStatusCode;
+import http.Token;
 import models.Movie;
 import models.MoviePicture;
 import models.Picture;
-import session.Session;
 
 /**
  * Servlet implementation class Picture
@@ -46,7 +46,11 @@ public class MovieServlet extends HttpServlet {
 		Base b = new Base();
 		List<Movie> movies = null;
 		try {
-			movies = b.select("SELECT * FROM Movie", (rs) -> {
+			movies = b.select("SELECT Movie.id as id, title, releaseDate, description, Picture.name as cover " + 
+					"FROM Movie " + 
+					"INNER JOIN MoviePicture ON Movie.id = MoviePicture.idMovie " + 
+					"INNER JOIN Picture ON MoviePicture.idPicture = Picture.id " + 
+					"WHERE MoviePicture.type = 'cover'", (rs) -> {
 				try {
 					return new Movie(rs);
 				} catch (SQLException e) {
@@ -65,7 +69,7 @@ public class MovieServlet extends HttpServlet {
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		if (!Session.isConnected(request)) {
+		if (!Token.isConnected(request)) {
 			HttpStatusCode.Unauthorized.sendStatus(response);
 			return;
 		}
@@ -88,22 +92,23 @@ public class MovieServlet extends HttpServlet {
 		try {
 			cover.write();
 			MoviePicture mp = new MoviePicture();
-			base.insert(Movie.class, movie);
-			base.insert(Picture.class, picture);
+			base.insert(movie);
+			base.insert(picture);
 			mp.idMovie = movie.id;
 			mp.idPicture = picture.id;
 			mp.type = "cover";
-			base.insert(MoviePicture.class, mp);
+			base.insert(mp);
 		} catch (Exception e) {
 			e.printStackTrace();
 			HttpStatusCode.InternalServerError.sendStatus(response);
 			return;
 		}
-		HttpStatusCode.Ok.sendStatus(response);
+		movie.cover = picture.name;
+		Servlet.sendJson(movie, response);
 	}
 	
 	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		if (!Session.isConnected(request)) {
+		if (!Token.isConnected(request)) {
 			HttpStatusCode.Unauthorized.sendStatus(response);
 			return;
 		}
@@ -147,7 +152,7 @@ public class MovieServlet extends HttpServlet {
 				movie.releaseDate = new Date(releaseDate);
 			}
 			b.updateOne(movie);
-			HttpStatusCode.Ok.sendStatus(response);
+			Servlet.sendJson(movie, response);
 		} catch (Exception e) {
 			e.printStackTrace();
 			HttpStatusCode.InternalServerError.sendStatus(response);
@@ -156,7 +161,7 @@ public class MovieServlet extends HttpServlet {
 	
 	@Override
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		if (!Session.isConnected(request)) {
+		if (!Token.isConnected(request)) {
 			HttpStatusCode.Unauthorized.sendStatus(response);
 			return;
 		}

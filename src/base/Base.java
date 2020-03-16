@@ -18,7 +18,7 @@ import annotation.ForeignKey;
 import annotation.NotNull;
 import annotation.PrimaryKey;
 import annotation.Table;
-import helpers.Config;
+import config.Config;
 import models.Movie;
 import models.MoviePicture;
 import models.Picture;
@@ -123,10 +123,10 @@ public class Base {
 		return t.name();
 	}
 	
-	public <T> T insert(Class<T> c, T object) throws SQLException, IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
+	public <T> T insert(T object) throws SQLException, IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
 		boolean isClosed = this.isClosed();
-		String tableName = getTableName(c);
-		Field fields[] = c.getDeclaredFields();
+		String tableName = getTableName(object.getClass());
+		Field fields[] = object.getClass().getDeclaredFields();
 		Insert insert = new Insert(tableName);
 		Field primaryKey = null;
 		for (Field field : fields) {
@@ -258,7 +258,7 @@ public class Base {
 			builder.append(" ");
 			Column col = (Column) field.getAnnotation(Column.class);
 			if (col == null) {
-				throw new Error(String.format("%s.%s must be annoted by annotation.Column", c.getName(), field.getName()));
+				continue;
 			}
 			builder.append(colName);
 			builder.append(" ");
