@@ -31,6 +31,18 @@ public class Verification {
 		this.errors.add(parameter);
 		return null;
 	}
+	
+	public String getString(String parameter) {
+		return this.getString(parameter, 1);
+	}
+	
+	public String getNullableString(String parameter) {
+		String value = this.request.getParameter(parameter);
+		if (value == null || value.isEmpty()) {
+			return null;
+		}
+		return value;
+	}
 
 	public String getString(String parameter, Integer minLen) {
 		String value = this.request.getParameter(parameter);
@@ -54,11 +66,27 @@ public class Verification {
 	}
 	
 	public Long getLong(String parameter) {
-		String value = this.checkField(parameter, "[0-9]+");
+		String value = this.checkField(parameter, "/^\\s+$/");
 		if (value != null) {
 			return Long.parseLong(value);
 		}
 		return null;
+	}
+	
+	public Long getNullableLong(String parameter) {
+		String value = this.request.getParameter(parameter);
+		if (value == null || value.isEmpty() || Pattern.matches("/^(\\s*|\\d+)$/", value)) {
+			return null;
+		}
+		return Long.parseLong(value);
+	}
+
+	public Boolean getBoolean(String parameter) {
+		String value = this.request.getParameter(parameter);
+		if (value == null || value.equals("false")) {
+			return false;
+		}
+		return true;
 	}
 	
 	/**

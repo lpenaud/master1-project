@@ -49,7 +49,11 @@ public class MovieServlet extends HttpServlet {
 					"FROM Movie " + 
 					"INNER JOIN MoviePicture ON Movie.id = MoviePicture.idMovie " + 
 					"INNER JOIN Picture ON MoviePicture.idPicture = Picture.id " + 
-					"WHERE MoviePicture.type='cover'", (rs) -> {
+					"WHERE MoviePicture.type=?", (statement) -> {
+						try {
+							statement.setString(1, "cover");
+						} catch (SQLException e) {}
+					}, (rs) -> {
 				try {
 					return new Movie(rs);
 				} catch (SQLException e) {
