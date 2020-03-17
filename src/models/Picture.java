@@ -28,7 +28,7 @@ public class Picture implements Model {
 	
 	public Picture(ResultSet rs) throws SQLException {
 		this.id = rs.getInt("id");
-		this.name = rs.getString("pathname");
+		this.name = rs.getString("name");
 		this.contentType = rs.getString("contentType");
 	}
 }

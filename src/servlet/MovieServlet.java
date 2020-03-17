@@ -1,8 +1,9 @@
 package servlet;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -65,6 +66,9 @@ public class MovieServlet extends HttpServlet {
 					return null;
 				}
 			});
+			movies.stream().forEach((movie) -> {
+				movie.cover = generateCoverUrl(request, movie.cover);
+			});
 			Servlet.sendJson(movies, response);
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -110,7 +114,7 @@ public class MovieServlet extends HttpServlet {
 			HttpStatusCode.InternalServerError.sendStatus(response);
 			return;
 		}
-		movie.cover = picture.name;
+		movie.cover = generateCoverUrl(request, picture.name);
 		Servlet.sendJson(movie, response);
 	}
 	
@@ -124,7 +128,7 @@ public class MovieServlet extends HttpServlet {
 		if (formater.sendError(response)) {
 			return;
 		}
-		Movie movie;
+		Movie oldMovie;
 		Base b = new Base();
 		try {
 			List<Movie> result = b.select("SELECT * FROM Movie WHERE id=?", (PreparedStatement statement) -> {
@@ -145,27 +149,27 @@ public class MovieServlet extends HttpServlet {
 			if (result == null) {
 				throw new Exception("Not found");
 			}
-			movie = result.get(0);
+			oldMovie = result.get(0);
 			String title = formater.readString("title");
 			String description = formater.readString("description");
 			Long releaseDate = formater.readLong("releaseDate");
 			if (title != null) {
-				movie.title = title;
+				oldMovie.title = title;
 			}
 			if (description != null) {
-				movie.description = description;
+				oldMovie.description = description;
 			}
 			if (releaseDate != null) {
-				movie.releaseDate = new Date(releaseDate);
+				oldMovie.releaseDate = new Date(releaseDate);
 			}
-			b.updateOne(movie);
+			b.updateOne(oldMovie);
 			List<Movie> movies = b.select("SELECT Movie.id as id, title, releaseDate, description, Picture.name as cover " + 
 					"FROM Movie " + 
 					"INNER JOIN MoviePicture ON Movie.id = MoviePicture.idMovie " + 
 					"INNER JOIN Picture ON MoviePicture.idPicture = Picture.id " + 
 					"WHERE MoviePicture.type='cover' AND Movie.id=?", (statement) -> {
 						try {
-							statement.setInt(1, movie.id);
+							statement.setInt(1, oldMovie.id);
 						} catch (SQLException e) {}
 					}, (rs) -> {
 						try {
@@ -174,7 +178,9 @@ public class MovieServlet extends HttpServlet {
 							return null;
 						}
 					});
-			Servlet.sendJson(movies.get(0), response);
+			Movie newMovie = movies.get(0);
+			newMovie.cover = generateCoverUrl(request, newMovie.cover);
+			Servlet.sendJson(newMovie, response);
 		} catch (Exception e) {
 			e.printStackTrace();
 			HttpStatusCode.InternalServerError.sendStatus(response);
@@ -223,6 +229,16 @@ public class MovieServlet extends HttpServlet {
 			return;
 		}
 		HttpStatusCode.Ok.sendStatus(response);
+	}
+	
+	private static String generateCoverUrl(HttpServletRequest request, String cover) {
+		try {
+			URI uri = new URI(request.getRequestURL().toString());
+			return uri.resolve(request.getContextPath() + "/image" + "?name=" + cover).toString();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 }

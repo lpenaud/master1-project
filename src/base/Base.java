@@ -189,8 +189,8 @@ public class Base {
 		while (rs.next()) {
 			objects.add(function.apply(rs));
 		}
-		statement.close();
 		rs.close();
+		statement.close();
 		this.close();
 		return objects;
 	}
