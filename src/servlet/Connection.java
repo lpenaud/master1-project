@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import helpers.Servlet;
+import helpers.Validator;
 import http.HttpStatusCode;
 import http.Token;
 
@@ -38,8 +39,12 @@ public class Connection extends HttpServlet {
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		String login = request.getParameter("login");
-		String password = request.getParameter("password");
+		Validator validator = new Validator(request);
+		String login = validator.getString("login");
+		String password = validator.getString("password");
+		if (validator.sendError(response)) {
+			return;
+		}
 		if (Servlet.connect(login, password)) {
 			Token token = new Token();
 			token.send(response);

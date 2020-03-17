@@ -1,6 +1,9 @@
 package servlet;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Paths;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -14,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import base.Base;
+import config.Config;
 import helpers.PartFormater;
 import helpers.Servlet;
 import http.HttpStatusCode;
@@ -190,12 +194,35 @@ public class MovieServlet extends HttpServlet {
 		}
 		Base base = new Base();
 		try {
+			List<Movie> movies = base.select("SELECT Movie.id as id, title, releaseDate, description, Picture.name as cover " + 
+					"FROM Movie " + 
+					"INNER JOIN MoviePicture ON Movie.id = MoviePicture.idMovie " + 
+					"INNER JOIN Picture ON MoviePicture.idPicture = Picture.id " + 
+					"WHERE MoviePicture.type='cover' AND Movie.id=?", (statement) -> {
+						try {
+							statement.setInt(1, id);
+						} catch (SQLException e) {}
+					}, (rs) -> {
+						try {
+							return new Movie(rs);
+						} catch (SQLException e) {
+							return null;
+						}
+					});
+			if (movies.isEmpty()) {
+				HttpStatusCode.NotFound.sendStatus(response);
+			}
+			Movie movie = movies.get(0);
 			base.deleteOne(new Movie(id));
-			HttpStatusCode.Ok.sendStatus(response);
+			Files.delete(Paths.get(Config.config.getBucket(), movie.cover));
+		} catch (IOException e) {
+			e.printStackTrace();
 		} catch (SQLException | IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
 			HttpStatusCode.InternalServerError.sendStatus(response);
+			return;
 		}
+		HttpStatusCode.Ok.sendStatus(response);
 	}
 
 }

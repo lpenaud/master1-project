@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import base.Base;
 import helpers.ListHelpers;
 import helpers.Servlet;
-import helpers.Verification;
+import helpers.Validator;
 import http.HttpStatusCode;
 import models.Movie;
 
@@ -34,11 +34,11 @@ public class Search extends HttpServlet implements Consumer<PreparedStatement>, 
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		Verification verification = new Verification(request);
-		title = verification.getNullableString("title");
-		before = verification.getNullableLong("before");
-		after = verification.getNullableLong("after");
-		if (verification.sendError(response) || (title == null && before == null && after == null)) {
+		Validator validator = new Validator(request);
+		title = validator.getNullableString("title");
+		before = validator.getNullableLong("before");
+		after = validator.getNullableLong("after");
+		if (validator.sendError(response) || (title == null && before == null && after == null)) {
 			return;
 		}
 		List<String> and = new ArrayList<>();
