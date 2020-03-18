@@ -1,4 +1,4 @@
-package helpers;
+package servlet.helpers;
 
 import java.io.IOException;
 import java.nio.file.Paths;

@@ -1,8 +1,6 @@
 package servlet;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Date;
@@ -19,13 +17,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import base.Base;
 import config.Config;
-import helpers.PartFormater;
-import helpers.Servlet;
 import http.HttpStatusCode;
 import http.Token;
 import models.Movie;
 import models.MoviePicture;
 import models.Picture;
+import servlet.helpers.ImagePicture;
+import servlet.helpers.PartFormater;
+import servlet.helpers.Servlet;
 
 /**
  * Servlet implementation class Picture
@@ -67,7 +66,7 @@ public class MovieServlet extends HttpServlet {
 				}
 			});
 			movies.stream().forEach((movie) -> {
-				movie.cover = generateCoverUrl(request, movie.cover);
+				movie.cover = ImagePicture.generateCoverUrl(request, movie.cover);
 			});
 			Servlet.sendJson(movies, response);
 		} catch (SQLException e) {
@@ -114,7 +113,7 @@ public class MovieServlet extends HttpServlet {
 			HttpStatusCode.InternalServerError.sendStatus(response);
 			return;
 		}
-		movie.cover = generateCoverUrl(request, picture.name);
+		movie.cover = ImagePicture.generateCoverUrl(request, picture.name);
 		Servlet.sendJson(movie, response);
 	}
 	
@@ -179,7 +178,7 @@ public class MovieServlet extends HttpServlet {
 						}
 					});
 			Movie newMovie = movies.get(0);
-			newMovie.cover = generateCoverUrl(request, newMovie.cover);
+			newMovie.cover = ImagePicture.generateCoverUrl(request, newMovie.cover);
 			Servlet.sendJson(newMovie, response);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -229,16 +228,6 @@ public class MovieServlet extends HttpServlet {
 			return;
 		}
 		HttpStatusCode.Ok.sendStatus(response);
-	}
-	
-	private static String generateCoverUrl(HttpServletRequest request, String cover) {
-		try {
-			URI uri = new URI(request.getRequestURL().toString());
-			return uri.resolve(request.getContextPath() + "/image" + "?name=" + cover).toString();
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
-		return null;
 	}
 
 }

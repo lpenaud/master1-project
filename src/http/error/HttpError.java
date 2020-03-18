@@ -7,8 +7,8 @@ import javax.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 
-import helpers.Servlet;
 import http.HttpStatusCode;
+import servlet.helpers.Servlet;
 
 @JsonAutoDetect(fieldVisibility = Visibility.PROTECTED_AND_PUBLIC)
 public abstract class HttpError {
